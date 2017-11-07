@@ -11,10 +11,9 @@
 
 #ifndef BABY_H_
 #define BABY_H_
-#include <string>
 
 /*
- * Should be returned from any of the 8 standard operations.
+ * Should be returned from any of the 7 standard operations.
  * This helps diagnose any faults and safely shut Baby down.
  * Feel free to add more if you think they could be useful.
  */
@@ -39,11 +38,17 @@ public:
 	string getCurrentInstruction();
 	string getPresentInstruction();
 
-	string readLineFromStore(int store[][32], int lineNumber);
-	void displayStore(int store[][32]);
-	int getOperand(int store[][32], int lineNumber);
-	int getOpcode(int store[][32], int lineNumber);
-	int STO(int store[][32], string accumulator, int operand);
+	string readLineFromStore(int lineNumber);
+	void displayStore();
+	int getOperand(int lineNumber);
+	int getOpcode(int lineNumber);
+
+	int JMP();
+	int JRP();
+	int LDN();
+	int STO(int operand);
+	int SUB();
+	int CMP();
 
 	int test();
 

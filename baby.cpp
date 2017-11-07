@@ -11,10 +11,7 @@
  */
 
 #include <iostream>
-#include <string>
-#include <fstream>
-#include <stdlib.h>
-#include <time.h>
+#include <bitset>
 #include "baby.h"
 
 using namespace std;
@@ -92,7 +89,7 @@ string Baby::getPresentInstruction()
  * What will actually happen is it will just read the accumulator (since accumulator will hold
  * the appropriate operand from the last instruction? Is that right?)
  */
-string Baby::readLineFromStore(int store[][32], int lineNumber)
+string Baby::readLineFromStore(int lineNumber)
 {
 	string instruction = "";
 
@@ -109,7 +106,7 @@ string Baby::readLineFromStore(int store[][32], int lineNumber)
  * This function may be better off just reading a string instruction passed in from the
  * current instruction register, so subject to change.
  */
-int Baby::getOpcode(int store[][32], int lineNumber)
+int Baby::getOpcode(int lineNumber)
 {
 	string opcode = "";
 
@@ -141,7 +138,7 @@ int Baby::getOpcode(int store[][32], int lineNumber)
  * This function may be better off just reading a string instruction passed in from the
  * current instruction register, so subject to change.
  */
-int Baby::getOperand(int store[][32], int lineNumber)
+int Baby::getOperand(int lineNumber)
 {
 	string operand = "";
 
@@ -224,7 +221,7 @@ int Baby::getOperand(int store[][32], int lineNumber)
  * Displays the entire store. Called after every instruction is executed.
  * In the program, this could be every second, maybe?
  */
-void Baby::displayStore(int store[][32])
+void Baby::displayStore()
 {
 	for (int i=0; i<32; i++)
 	{
@@ -238,21 +235,166 @@ void Baby::displayStore(int store[][32])
 }
 
 /*
+ * Jump to the address stored in present instruction
+ */
+int Baby::JMP()
+{
+	currentInstruction = "";
+
+	for (int i=0; i<32; i++)
+	{
+		if (i < 5)
+		{
+			if (presentInstruction[i] == '1')
+			{
+				currentInstruction += '1';
+			}
+			else
+			{
+				currentInstruction += '0';
+			}
+		}
+		else
+		{
+			currentInstruction += '0';
+		}
+	}
+
+	return SUCCESS;
+}
+
+/*
+ * Jump to the address stored in currentInstruction + the value stored in presentInstruction
+ */
+int Baby::JRP()
+{
+	/*
+	int presentInstructionDecimal = binaryToDecimal(presentInstruction);
+	string valueAsBinary = bitset<32>(presentInstructionDecimal).to_string();
+	string lsbBinary = "00000000000000000000000000000000";
+
+	for (unsigned int i=0; i<valueAsBinary.length(); i++)
+	{
+		if (valueAsBinary[i] == '0')
+		{
+			lsbBinary[31 - i] = '0';
+		}
+		else
+		{
+			lsbBinary[31 - i] = '1';
+		}
+	}
+
+	for (int i=0; i<32; i++)
+	{
+		if (currentInstruction[i] == '0' && lsbBinary[i] == '1')
+		{
+			currentInstruction[i] = '1';
+		}
+		else if (currentInstruction[i] == '1' && lsbBinary[i] == '1')
+		{
+			currentInstruction[i] = '0';
+		}
+	}
+	*/
+
+	return SUCCESS;
+}
+
+/*
+ * Retrieves the decimal value of the present instruction, converts it to binary and then
+ * swaps its values round so it reads left to right. This is stored in the accumulator
+ */
+int Baby::LDN()
+{
+	/*
+	int negativeDecimal = binaryToDecimal(presentInstruction) * -1;
+	string negativeBinary = bitset<32>(negativePresentInstruction).to_string();
+
+	for (unsigned int i=0; i<negativeBinary.length(); i++)
+	{
+		if (negativeBinary[i] == '0')
+		{
+			accumulator[31 - i] = '0';
+		}
+		else
+		{
+			accumulator[31 - i] = '1';
+		}
+	}
+	*/
+
+	return SUCCESS;
+}
+
+/*
  * Test STO function. STO is used to store the value of the accumulator register in a
  * specified location in the store. In the test function, this changes the first line of
  * the store (run the program and see).
  */
-int Baby::STO(int store[][32], string accumulator, int operand)
+int Baby::STO(int operand)
 {
+	//currentInstructionDecimal = binaryToDecimal(currentInstruction);
+
 	for (int i=0; i<32; i++)
 	{
 		if (accumulator[i] == '0')
 		{
 			store[operand][i] = 0;
+			//store[currentInstructionDecimal][i] = 0;
 		}
 		else
 		{
 			store[operand][i] = 1;
+			//store[currentInstructionDecimal][i] = 1;
+		}
+	}
+
+	return SUCCESS;
+}
+
+/*
+ * Takes the decimal version of the present instruction away from the decimal version of the
+ * accumulator. The decimals are obtained through Dylan's binary conversion function.
+ * The calculated decimal is then transformed back to binary through a handy to_string function
+ * in the biset library
+ */
+int Baby::SUB()
+{
+	//int result = binaryToDecimal(accumulator) - binaryToDecimal(presentInstruction);
+
+	//accumulator = bitset<32>(result).to_string();
+
+	return SUCCESS;
+}
+
+/*
+ * Returns true if the rightmost digit is 1, which usually indicates the number is negative
+ */
+int Baby::CMP()
+{
+	if (accumulator[31] == '1')
+	{
+		if (currentInstruction[0] == '0')
+		{
+			currentInstruction[0] = '1';
+		}
+		else
+		{
+			for (unsigned int i=0; i<currentInstruction.length(); i++)
+			{
+				if (currentInstruction[i] == '0')
+				{
+					currentInstruction[i] = '1';
+
+					for (int j=i; j>-0; j--)
+					{
+						currentInstruction[j-1] = '0';
+					}
+
+					break;
+				}
+			}
 		}
 	}
 
@@ -267,40 +409,86 @@ int Baby::STO(int store[][32], string accumulator, int operand)
  */
 int Baby::test()
 {
-	string instruction;
-	int operand;
-	int opcode;
+	cout << "Displaying empty store..." << endl;
+	displayStore();
 
-	instruction = readLineFromStore(store, 0);
-	operand = getOperand(store, 0);
-	opcode = getOpcode(store, 0);
+	cout << "Testing STO function..." << endl;
 
-	cout << "Output of first line of store is " << instruction << endl;
-	cout << "Operand = " << operand << endl;
-	cout << "Opcode = " << opcode << endl << endl;
-	cout << "STORE BEFORE STO OPERATION:" << endl;
-
-	displayStore(store);
+	cout << "Output of first line of store is " << readLineFromStore(0) << endl;
+	cout << "Operand = " << getOperand(0) << endl;
+	cout << "Opcode = " << getOpcode(0) << endl;
 
 	cout << endl << "Changing first line of store..." << endl;
 
-	string accumulator = "00111001011111010010001000010101";	//Random value of the accumulator
-	if (STO(store, accumulator, 0) != SUCCESS)
+	accumulator = "00111001011111010010001000010101";	//Random value of the accumulator
+	if (STO(0) != SUCCESS)
 	{
 		cout << "The STO function failed!" << endl;
 		return FAIL;
 	}
 
 	cout << endl << "STORE AFTER STO OPERATION:" << endl;
-	displayStore(store);
+	displayStore();
 
-	instruction = readLineFromStore(store, 0);
-	operand = getOperand(store, 0);
-	opcode = getOpcode(store, 0);
+	cout << endl << "Output of first line of store is " << readLineFromStore(0) << endl;
+	cout << "Operand = " << getOperand(0) << endl;
+	cout << "Opcode = " << getOpcode(0) << endl << endl;
 
-	cout << endl << "Output of first line of store is " << instruction << endl;
-	cout << "Operand = " << operand << endl;
-	cout << "Opcode = " << opcode << endl << endl;
+
+
+	cout << "Testing CMP function..." << endl;
+	currentInstruction = "11100000000000000000000000000000";
+	accumulator = "11001100000101000000000010101110";
+
+	cout << "Testing CMP with positive accumulator" << endl;
+	cout << "Is accumulator negative?" << endl;
+	cout << "Current instruction register before CMP check:" << currentInstruction << endl;
+	cout << "Performing CMP operation..." << endl;
+
+	if (CMP() == FAIL)
+	{
+		cout << "Operation failed!" << endl;
+		return FAIL;
+	}
+
+	cout << "Current instruction register after CMP check (increments if negative):" << currentInstruction << endl;
+
+	currentInstruction = "10000010000011000000011110000000";
+	accumulator = "11001100000101000000000010101111";
+
+	cout << "Testing with negative number in accumulator" << endl;
+	cout << "Is accumulator negative?" << endl;
+	cout << "Current instruction register before CMP check:" << currentInstruction << endl;
+	cout << "Performing CMP operation..." << endl;
+
+	if (CMP() == FAIL)
+	{
+		cout << "Operation failed!" << endl;
+		return FAIL;
+	}
+
+	cout << "Current instruction register after CMP check (increments if negative):" << currentInstruction << endl;
+	cout << "CMP test complete!" << endl << endl;
+
+
+
+	cout << "Testing JMP function..." << endl;
+	cout << "Setting present instruction equal to 11010000000000000000000000000000 (13)" << endl;
+
+	presentInstruction = "11010000000000000000000000000000";
+
+	cout << "Current instruction register before JMP: " << currentInstruction << endl;
+
+	if (JMP() == FAIL)
+	{
+		cout << "JMP failed!" << endl;
+		return FAIL;
+	}
+
+	cout << "Current instruction register after JMP: " << currentInstruction << endl;
+	cout << "JMP test complete!" << endl;
+
+
 
 	return SUCCESS;
 }

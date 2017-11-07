@@ -11,6 +11,7 @@
  */
 
 #include <iostream>
+#include <bitset>
 #include "baby.h"
 
 using namespace std;
@@ -25,7 +26,7 @@ int main()
 	}
 	else
 	{
-		cout << "Test was successful!" << endl;
+		cout << endl << "Testing was successful!" << endl;
 	}
 
 	delete baby;			//Safely delete the baby object (has a programmed destructor)
