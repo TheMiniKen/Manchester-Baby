@@ -13,6 +13,7 @@
 #include <iostream>
 #include <bitset>
 #include "baby.h"
+#include <stdlib.h>
 
 using namespace std;
 
@@ -399,6 +400,104 @@ int Baby::CMP()
 	}
 
 	return SUCCESS;
+}
+
+/*
+ * Calls the appropriate function based on the opcode given in the line number.
+ */
+void Baby::callOpcodeFunction(int lineNumber)
+{
+	int opcode = getOpcode(lineNumber);
+
+	if(opcode == 0)
+	{
+		if (JMP() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 1)
+	{
+		if (JRP() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 2)
+	{
+		if (LDN() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 3)
+	{
+		if (STO() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 4 || opcode == 5)
+	{
+		if (SUB() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 6)
+	{
+		if (CMP() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+	else if(opcode == 7)
+	{
+		if (STP() == SUCCESS)
+		{
+			cout << "Success" << endl;
+		}
+	}
+}
+
+/*
+ * Prints the current state of the baby: the store, the accumulator, the current instruction
+ * and the present instruction.
+ */
+void Baby::printState()
+{
+	cout << "Store:" << endl;
+
+	for (int i=0; i<32; i++)
+	{
+		for (int j=0; j<32; j++)
+		{
+			cout << store[i][j];
+		}
+		
+		cout << endl;
+	}
+
+	cout << "Accumulator: " << getAccumulator << endl;
+
+	cout << "Current Instruction: " << getCurrentInstruction << endl:
+
+	cout << "Present Instruction: " << getPresentInstruction << endl;
+}
+
+/*
+ * Function that will not proceed until the user presses the spacebar or escape key.
+ */
+void Baby::cont()
+{
+	String userInput = "";
+
+	cin >> userInput;
+	
+	if(userInput != "")
+	{
+		exit(0);
+	}
 }
 
 /*
