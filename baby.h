@@ -19,6 +19,10 @@
  */
 #define SUCCESS	(0)
 #define FAIL (1)
+#define OUT_OF_RANGE (2)
+#define STOP (3)
+#define CONTINUE (4)
+#define END_PROGRAM (5)
 
 using namespace std;
 
@@ -39,16 +43,20 @@ public:
 	string getPresentInstruction();
 
 	string readLineFromStore(int lineNumber);
-	void displayStore();
 	int getOperand(int lineNumber);
 	int getOpcode(int lineNumber);
+	int binaryToDecimal(string binary);
 
-	int JMP();
-	int JRP();
-	int LDN();
-	int STO(int operand);
+	void JMP();
+	void JRP();
+	void LDN();
+	void STO(int operand);
 	int SUB();
-	int CMP();
+	void CMP();
+
+	void callOpcode(int lineNumber);
+	void printState();
+	int cont();
 
 	int test();
 

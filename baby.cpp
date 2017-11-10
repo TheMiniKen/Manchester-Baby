@@ -14,6 +14,7 @@
 #include <bitset>
 #include "baby.h"
 #include <stdlib.h>
+#include <cmath>
 
 using namespace std;
 
@@ -34,8 +35,8 @@ Baby::Baby()
 	}
 
 	accumulator = "00000000000000000000000000000000";
-	currentInstruction = "";
-	presentInstruction = "";
+	currentInstruction = "00000000000000000000000000000000";
+	presentInstruction = "00000000000000000000000000000000";
 }
 
 /*
@@ -116,22 +117,7 @@ int Baby::getOpcode(int lineNumber)
 		opcode += to_string(store[lineNumber][i]);		//Obtains the entire store line as string
 	}
 
-	if (opcode == "000")
-		return 0;
-	else if (opcode == "100")
-		return 1;
-	else if (opcode == "010")
-		return 2;
-	else if (opcode == "110")
-		return 3;
-	else if (opcode == "001")
-		return 4;
-	else if (opcode == "101")
-		return 5;
-	else if (opcode == "011")
-		return 6;
-	else
-		return 7;
+	return binaryToDecimal(opcode);
 }
 
 /*
@@ -148,168 +134,107 @@ int Baby::getOperand(int lineNumber)
 		operand += to_string(store[lineNumber][i]);
 	}
 
-	//return binaryToDecimal(operand);		//Retrieves the value 0-31 for the operand
-
-	//TO BE DELETED. THIS SHOULD BE COVERED BY DYLAN'S BINARY TO DECIMAL FUNCTION (SEE ABOVE)
-	//ONLY HERE FOR TEMPORARY USE
-	if (operand == "00000")
-		return 0;
-	else if (operand == "10000")
-		return 1;
-	else if (operand == "01000")
-		return 2;
-	else if (operand == "11000")
-		return 3;
-	else if (operand == "00100")
-		return 4;
-	else if (operand == "10100")
-		return 5;
-	else if (operand == "01100")
-		return 6;
-	else if (operand == "11100")
-		return 7;
-	else if (operand == "00010")
-		return 8;
-	else if (operand == "10010")
-		return 9;
-	else if (operand == "01010")
-		return 10;
-	else if (operand == "11010")
-		return 11;
-	else if (operand == "00110")
-		return 12;
-	else if (operand == "10110")
-		return 13;
-	else if (operand == "01110")
-		return 14;
-	else if (operand == "11110")
-		return 15;
-	else if (operand == "00001")
-		return 16;
-	else if (operand == "10001")
-		return 17;
-	else if (operand == "01001")
-		return 18;
-	else if (operand == "11001")
-		return 19;
-	else if (operand == "00101")
-		return 20;
-	else if (operand == "10101")
-		return 21;
-	else if (operand == "01101")
-		return 22;
-	else if (operand == "11101")
-		return 23;
-	else if (operand == "00011")
-		return 24;
-	else if (operand == "10011")
-		return 25;
-	else if (operand == "01011")
-		return 26;
-	else if (operand == "11011")
-		return 27;
-	else if (operand == "00111")
-		return 28;
-	else if (operand == "10111")
-		return 29;
-	else if (operand == "01111")
-		return 30;
-	else
-		return 31;
+	return binaryToDecimal(operand);		//Retrieves the value 0-31 for the operand
 }
+
+/*
+ * Simple conversion from a string of a binary number of any length to its integer equivalent
+ */
+int Baby::binaryToDecimal(string binary)
+{
+	int decimal = 0;
+
+	if (binary[31] == '0')
+	{
+		for (unsigned int i=0; i<binary.length(); i++)
+		{
+			if (binary[i] == '1')
+			{
+				decimal += pow(2, i);
+			}
+		}
+	}
+	else
+	{
+		for (unsigned int i=0; i<binary.length()-1; i++)
+		{
+			if (binary[i] == '1')
+			{
+				decimal += pow(2, i);
+			}
+		}
+
+		decimal = decimal * -1;
+	}
+
+	return decimal;
+}
+
+
+
 
 /*
  * Displays the entire store. Called after every instruction is executed.
  * In the program, this could be every second, maybe?
  */
-void Baby::displayStore()
-{
-	for (int i=0; i<32; i++)
-	{
-		for (int j=0; j<32; j++)
-		{
-			cout << store[i][j];
-		}
-
-		cout << endl;
-	}
-}
 
 /*
  * Jump to the address stored in present instruction
  */
-int Baby::JMP()
+void Baby::JMP()
 {
 	currentInstruction = "";
 
-	for (int i=0; i<32; i++)
+	int presentInstructionValue = binaryToDecimal(presentInstruction);
+	string binary = bitset<32>(presentInstructionValue).to_string();
+
+	for (unsigned int i=0; i<binary.length(); i++)
 	{
-		if (i < 5)
+		if (binary[i] == '0')
 		{
-			if (presentInstruction[i] == '1')
-			{
-				currentInstruction += '1';
-			}
-			else
-			{
-				currentInstruction += '0';
-			}
+			currentInstruction[31 - i] = '0';
 		}
 		else
 		{
-			currentInstruction += '0';
+			currentInstruction[31 - i] = '1';
 		}
 	}
 
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 /*
  * Jump to the address stored in currentInstruction + the value stored in presentInstruction
  */
-int Baby::JRP()
+void Baby::JRP()
 {
-	/*
-	int presentInstructionDecimal = binaryToDecimal(presentInstruction);
-	string valueAsBinary = bitset<32>(presentInstructionDecimal).to_string();
-	string lsbBinary = "00000000000000000000000000000000";
+	int currentInstructionValue = binaryToDecimal(currentInstruction);
+	int presentInstructionValue = binaryToDecimal(presentInstruction);
 
-	for (unsigned int i=0; i<valueAsBinary.length(); i++)
+	string binary = bitset<32>(currentInstructionValue + presentInstructionValue).to_string();
+
+	for (unsigned int i=0; i<binary.length(); i++)
 	{
-		if (valueAsBinary[i] == '0')
+		if (binary[i] == '0')
 		{
-			lsbBinary[31 - i] = '0';
+			currentInstruction[31 - i] = '0';
 		}
 		else
 		{
-			lsbBinary[31 - i] = '1';
+			currentInstruction[31 - i] = '1';
 		}
 	}
 
-	for (int i=0; i<32; i++)
-	{
-		if (currentInstruction[i] == '0' && lsbBinary[i] == '1')
-		{
-			currentInstruction[i] = '1';
-		}
-		else if (currentInstruction[i] == '1' && lsbBinary[i] == '1')
-		{
-			currentInstruction[i] = '0';
-		}
-	}
-	*/
-
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 /*
  * Retrieves the decimal value of the present instruction, converts it to binary and then
  * swaps its values round so it reads left to right. This is stored in the accumulator
  */
-int Baby::LDN()
+void Baby::LDN()
 {
-	/*
-	int negativeDecimal = binaryToDecimal(presentInstruction) * -1;
+	int negativePresentInstruction = binaryToDecimal(presentInstruction) * -1;
 	string negativeBinary = bitset<32>(negativePresentInstruction).to_string();
 
 	for (unsigned int i=0; i<negativeBinary.length(); i++)
@@ -323,9 +248,8 @@ int Baby::LDN()
 			accumulator[31 - i] = '1';
 		}
 	}
-	*/
 
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 /*
@@ -333,25 +257,25 @@ int Baby::LDN()
  * specified location in the store. In the test function, this changes the first line of
  * the store (run the program and see).
  */
-int Baby::STO(int operand)
+void Baby::STO(int operand)
 {
-	//currentInstructionDecimal = binaryToDecimal(currentInstruction);
+	int currentInstructionDecimal = binaryToDecimal(currentInstruction);
 
 	for (int i=0; i<32; i++)
 	{
 		if (accumulator[i] == '0')
 		{
 			store[operand][i] = 0;
-			//store[currentInstructionDecimal][i] = 0;
+			store[currentInstructionDecimal][i] = 0;
 		}
 		else
 		{
 			store[operand][i] = 1;
-			//store[currentInstructionDecimal][i] = 1;
+			store[currentInstructionDecimal][i] = 1;
 		}
 	}
 
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 /*
@@ -362,9 +286,26 @@ int Baby::STO(int operand)
  */
 int Baby::SUB()
 {
-	//int result = binaryToDecimal(accumulator) - binaryToDecimal(presentInstruction);
+	int result = binaryToDecimal(accumulator) - binaryToDecimal(presentInstruction);
 
-	//accumulator = bitset<32>(result).to_string();
+	if (result == 2147483648 || result == -2147483648)
+	{
+		return OUT_OF_RANGE;
+	}
+
+	string binary = bitset<32>(result).to_string();
+
+	for (unsigned int i=0; i<binary.length(); i++)
+	{
+		if (binary[i] == '0')
+		{
+			accumulator[31 - i] = '0';
+		}
+		else
+		{
+			accumulator[31 - i] = '1';
+		}
+	}
 
 	return SUCCESS;
 }
@@ -372,7 +313,7 @@ int Baby::SUB()
 /*
  * Returns true if the rightmost digit is 1, which usually indicates the number is negative
  */
-int Baby::CMP()
+void Baby::CMP()
 {
 	if (accumulator[31] == '1')
 	{
@@ -399,65 +340,42 @@ int Baby::CMP()
 		}
 	}
 
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 /*
  * Calls the appropriate function based on the opcode given in the line number.
  */
-void Baby::callOpcodeFunction(int lineNumber)
+void Baby::callOpcode(int lineNumber)
 {
 	int opcode = getOpcode(lineNumber);
 
 	if(opcode == 0)
 	{
-		if (JMP() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		JMP();
 	}
 	else if(opcode == 1)
 	{
-		if (JRP() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		JRP();
 	}
 	else if(opcode == 2)
 	{
-		if (LDN() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		LDN();
 	}
 	else if(opcode == 3)
 	{
-		if (STO() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		STO(lineNumber);
 	}
 	else if(opcode == 4 || opcode == 5)
 	{
-		if (SUB() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		SUB();
 	}
 	else if(opcode == 6)
 	{
-		if (CMP() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
+		CMP();
 	}
-	else if(opcode == 7)
-	{
-		if (STP() == SUCCESS)
-		{
-			cout << "Success" << endl;
-		}
-	}
+
+	//return STOP;
 }
 
 /*
@@ -478,25 +396,27 @@ void Baby::printState()
 		cout << endl;
 	}
 
-	cout << "Accumulator: " << getAccumulator << endl;
-
-	cout << "Current Instruction: " << getCurrentInstruction << endl:
-
-	cout << "Present Instruction: " << getPresentInstruction << endl;
+	cout << endl << "Accumulator: " << accumulator << endl;
+	cout << "Current Instruction: " << currentInstruction << endl;
+	cout << "Present Instruction: " << presentInstruction << endl << endl;
 }
 
 /*
  * Function that will not proceed until the user presses the spacebar or escape key.
  */
-void Baby::cont()
+int Baby::cont()
 {
-	String userInput = "";
+	string userInput = "";
 
 	cin >> userInput;
 	
 	if(userInput != "")
 	{
-		exit(0);
+		return END_PROGRAM;
+	}
+	else
+	{
+		return CONTINUE;
 	}
 }
 
@@ -508,8 +428,9 @@ void Baby::cont()
  */
 int Baby::test()
 {
-	cout << "Displaying empty store..." << endl;
-	displayStore();
+	cout << "Initialising Baby..." << endl;
+
+	printState();
 
 	cout << "Testing STO function..." << endl;
 
@@ -520,74 +441,123 @@ int Baby::test()
 	cout << endl << "Changing first line of store..." << endl;
 
 	accumulator = "00111001011111010010001000010101";	//Random value of the accumulator
-	if (STO(0) != SUCCESS)
-	{
-		cout << "The STO function failed!" << endl;
-		return FAIL;
-	}
+	STO(0);
 
 	cout << endl << "STORE AFTER STO OPERATION:" << endl;
-	displayStore();
+	printState();
 
 	cout << endl << "Output of first line of store is " << readLineFromStore(0) << endl;
 	cout << "Operand = " << getOperand(0) << endl;
 	cout << "Opcode = " << getOpcode(0) << endl << endl;
+	cout << "STO test complete!" << endl << endl;
 
 
 
 	cout << "Testing CMP function..." << endl;
+	cout << "CMP tests to see if the accumulator is negative. If it is, increment the current instruction register." << endl;
+
 	currentInstruction = "11100000000000000000000000000000";
 	accumulator = "11001100000101000000000010101110";
 
-	cout << "Testing CMP with positive accumulator" << endl;
-	cout << "Is accumulator negative?" << endl;
-	cout << "Current instruction register before CMP check:" << currentInstruction << endl;
+	cout << "Testing CMP with positive accumulator..." << endl << endl;
+	cout << "Current instruction register before CMP check: " << currentInstruction << endl << endl;
 	cout << "Performing CMP operation..." << endl;
 
-	if (CMP() == FAIL)
-	{
-		cout << "Operation failed!" << endl;
-		return FAIL;
-	}
+	CMP();
 
-	cout << "Current instruction register after CMP check (increments if negative):" << currentInstruction << endl;
+	cout << "Current instruction register after CMP check: " << currentInstruction << endl << endl;
 
-	currentInstruction = "10000010000011000000011110000000";
 	accumulator = "11001100000101000000000010101111";
 
 	cout << "Testing with negative number in accumulator" << endl;
-	cout << "Is accumulator negative?" << endl;
-	cout << "Current instruction register before CMP check:" << currentInstruction << endl;
+	cout << "Current instruction register before CMP check: " << currentInstruction << endl;
 	cout << "Performing CMP operation..." << endl;
 
-	if (CMP() == FAIL)
-	{
-		cout << "Operation failed!" << endl;
-		return FAIL;
-	}
+	CMP();
 
-	cout << "Current instruction register after CMP check (increments if negative):" << currentInstruction << endl;
+	cout << "Current instruction register after CMP check: " << currentInstruction << endl;
 	cout << "CMP test complete!" << endl << endl;
 
 
 
 	cout << "Testing JMP function..." << endl;
+	cout << "JMP changes the current instruction register to the value of present instruction." << endl;
 	cout << "Setting present instruction equal to 11010000000000000000000000000000 (13)" << endl;
 
 	presentInstruction = "11010000000000000000000000000000";
 
 	cout << "Current instruction register before JMP: " << currentInstruction << endl;
 
-	if (JMP() == FAIL)
-	{
-		cout << "JMP failed!" << endl;
-		return FAIL;
-	}
+	JMP();
 
 	cout << "Current instruction register after JMP: " << currentInstruction << endl;
-	cout << "JMP test complete!" << endl;
+	cout << "JMP test complete!" << endl << endl;
 
 
+
+	cout << "Testing JRP function..." << endl;
+	cout << "JRP adds the value of present instruction to the current value of current instruction." << endl;
+	cout << "Setting current instruction register to 10010000000000000000000000000000" << endl;
+	cout << "Setting present instruction register to 01110000000000000000000000000000" << endl;
+
+	currentInstruction = "10010000000000000000000000000000";
+	presentInstruction = "01110000000000000000000000000000";
+
+	cout << "JRP function jumps to address of current register (line 9) plus value of present register (14)" << endl;
+	cout << "So current instruction register will contain value 23" << endl;
+	cout << "Performing JRP function..." << endl;
+
+	JRP();
+
+	cout << endl << "Accumulator: " << accumulator << endl;
+	cout << "Current Instruction: " << currentInstruction << endl;
+	cout << "Present Instruction: " << presentInstruction << endl << endl;
+	cout << "JRP test complete!" << endl << endl;
+
+
+	cout << "Testing LDN function..." << endl;
+	cout << "LDN negates present instruction register and stores it in accumulator." << endl;
+	cout << "Setting present instruction register to 01110000010000000011000000000000" << endl;
+
+	presentInstruction = "01110000010000000011000000000000";
+
+	cout << endl << "Accumulator: " << accumulator << endl;
+	cout << "Current Instruction: " << currentInstruction << endl;
+	cout << "Present Instruction: " << presentInstruction << endl << endl;
+	cout << "Performing LDN function..." << endl;
+
+	LDN();
+
+	cout << endl << "Accumulator: " << accumulator << endl;
+	cout << "Current Instruction: " << currentInstruction << endl;
+	cout << "Present Instruction: " << presentInstruction << endl << endl;
+	cout << "LDN test complete!" << endl << endl;
+
+
+
+	cout << "Testing SUB function..." << endl;
+	cout << "SUB subtracts present instruction from accumulator and stores result in accumulator" << endl;
+
+	presentInstruction = "01110000010000000011000000000001";
+
+	cout << endl << "Accumulator: " << accumulator << endl;
+	cout << "Current Instruction: " << currentInstruction << endl;
+	cout << "Present Instruction: " << presentInstruction << endl << endl;
+
+	cout << "Performing SUB function..." << endl;
+
+	if (SUB() == OUT_OF_RANGE)
+	{
+		cout << "Could not perform SUB operation. Sum went out of range." << endl;
+	}
+	else
+	{
+		cout << endl << "Accumulator: " << accumulator << endl;
+		cout << "Current Instruction: " << currentInstruction << endl;
+		cout << "Present Instruction: " << presentInstruction << endl << endl;
+	}
+
+	cout << "SUB test complete!" << endl << endl;
 
 	return SUCCESS;
 }

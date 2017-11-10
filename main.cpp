@@ -11,7 +11,6 @@
  */
 
 #include <iostream>
-#include <bitset>
 #include "baby.h"
 
 using namespace std;
