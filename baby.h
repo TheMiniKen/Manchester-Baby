@@ -54,6 +54,8 @@ public:
 	int SUB();
 	void CMP();
 
+	void insertInstruction(string line, int lineNumber);
+
 	void callOpcode(int lineNumber);
 	void printState();
 	int cont();

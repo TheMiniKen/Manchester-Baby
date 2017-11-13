@@ -14,6 +14,7 @@
 #include <bitset>
 #include "baby.h"
 #include <stdlib.h>
+#include <fstream>
 #include <cmath>
 
 using namespace std;
@@ -341,6 +342,21 @@ void Baby::CMP()
 	}
 
 	//return SUCCESS;
+}
+
+void Baby::insertInstruction(string line, int lineNumber)
+{
+	for (unsigned i=0; i<line.length(); i++)
+	{
+		if (line[i] == '0')
+		{
+			store[lineNumber][i] = 0;
+		}
+		else
+		{
+			store[lineNumber][i] = 1;
+		}
+	}
 }
 
 /*
